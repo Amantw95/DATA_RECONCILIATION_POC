@@ -2,11 +2,13 @@ from pyspark.sql import SparkSession
 from pyspark.sql.functions import sha2, concat_ws, col
 import os
 from utilities.config_loader import load_config
+from utilities.results_store import store_results
 
 class DataReconciliation:
     def __init__(self, config_file):
         self.config = load_config(config_file)
         self.spark = SparkSession.builder.appName("DataReconciliation").getOrCreate()
+        self.check_results = {}
 
     def load_data(self, path, file_format):
         """Load data from the given path and format."""
@@ -64,31 +66,29 @@ class DataReconciliation:
         source_df.show();
         target_df.show();
 
-        if self.config["schema_check"] and not self.validate_schema(source_df, target_df):
-            print(f"❌ Schema Mismatch!")
-
+        if self.config["schema_check"]:
+            self.check_results["schema_check"] = self.validate_schema(source_df, target_df)
         else:
-            print(f"✅ Schema Check Passed")
+            self.check_results["schema_check"] = "Skipped"
 
-        if self.config["row_count_check"] and not self.compare_row_counts(source_df, target_df):
-            print(f"❌ Row Count Mismatch!")
-            
+        if self.config["row_count_check"]:
+            self.check_results["row_count_check"] = self.validate_schema(source_df, target_df)
         else:
-            print(f"✅ Row Count Check Passed")
+            self.check_results["row_count_check"] = "Skipped"
 
-        if self.config["data_reconciliation"] and not self.reconcile_data(source_df, target_df):
-            print(f"❌ Data Mismatch!")
-        
+        if self.config["data_reconciliation"]:
+           self.check_results["data_reconciliation"] = self.validate_schema(source_df, target_df)
         else:
-            print(f"✅ Data Reconciliation Check Passed")
+            self.check_results["data_reconciliation"] = "Skipped"
 
-        if self.config["checksum_check"] and not self.validate_checksum(source_df, target_df):
-            print(f"❌ Checksum Mismatch!")
-                
+        if self.config["checksum_check"]:
+            self.check_results["checksum_check"] = self.validate_schema(source_df, target_df)
         else:
-            print(f"✅ CheckSum Check Passed")
+            self.check_results["checksum_check"] = "Skipped"
 
-        print(f"✅ File Passed Reconciliation")
+
+        print(f"✅ Reconciliation Test Execution Completed")
+        store_results(self.config["name"], self.check_results,self.config["name"]+"_test_result.csv")
             
 
 

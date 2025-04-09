@@ -1,3 +1,4 @@
+name: "Data Pipeline - Parquet"
 source:
   path: "source_data_parquet"
   format: "parquet"
