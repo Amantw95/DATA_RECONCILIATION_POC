@@ -47,44 +47,51 @@ class DataReconciliation:
         target_path = self.config["target"]["path"]
         file_format = self.config["source"]["format"]
 
-        source_files = set(os.listdir(source_path))
-        target_files = set(os.listdir(target_path))
+        # source_files = set(os.listdir(source_path))
+        # target_files = set(os.listdir(target_path))
 
-        if source_files != target_files:
-            print("❌ Source and target files do not match!")
-            print("Source files:", source_files)
-            print("Target files:", target_files)
-            return
+        # if source_files != target_files:
+        #     print("❌ Source and target files do not match!")
+        #     print("Source files:", source_files)
+        #     print("Target files:", target_files)
+        #     return
 
-        for file in source_files:
-            source_df = self.load_data(os.path.join(source_path, file), file_format)
-            target_df = self.load_data(os.path.join(target_path, file), file_format)
+        # for file in source_files:
 
-            print(f"\n🔍 Checking file: {file}")
+        source_df = self.load_data(source_path, file_format)
+        target_df = self.load_data(target_path, file_format)
 
-            if self.config["schema_check"] and not self.validate_schema(source_df, target_df):
-                print(f"❌ Schema Mismatch! for file: {file}")
-                continue
-            else:
-                print(f"✅ Schema Check Passed for file: {file}")
+        source_df.show();
+        target_df.show();
 
-            if self.config["row_count_check"] and not self.compare_row_counts(source_df, target_df):
-                print(f"❌ Row Count Mismatch! for file: {file}")
-                continue
-            else:
-                print(f"✅ Row Count Check Passed for file: {file}")
+        if self.config["schema_check"] and not self.validate_schema(source_df, target_df):
+            print(f"❌ Schema Mismatch!")
 
-            if self.config["data_reconciliation"] and not self.reconcile_data(source_df, target_df):
-                print(f"❌ Data Mismatch! for file: {file}")
-                continue
-            else:
-                print(f"✅ Data Reconciliation Check Passed for file: {file}")
+        else:
+            print(f"✅ Schema Check Passed")
 
-            if self.config["checksum_check"] and not self.validate_checksum(source_df, target_df):
-                print(f"❌ Checksum Mismatch! for file: {file}")
-                continue
-            else:
-                print(f"✅ CheckSum Check Passed for file: {file}")
+        if self.config["row_count_check"] and not self.compare_row_counts(source_df, target_df):
+            print(f"❌ Row Count Mismatch!")
+            
+        else:
+            print(f"✅ Row Count Check Passed")
 
-            print(f"✅ File Passed Reconciliation for file: {file}")
+        if self.config["data_reconciliation"] and not self.reconcile_data(source_df, target_df):
+            print(f"❌ Data Mismatch!")
+        
+        else:
+            print(f"✅ Data Reconciliation Check Passed")
 
+        if self.config["checksum_check"] and not self.validate_checksum(source_df, target_df):
+            print(f"❌ Checksum Mismatch!")
+                
+        else:
+            print(f"✅ CheckSum Check Passed")
+
+        print(f"✅ File Passed Reconciliation")
+            
+
+
+
+# Store entire folder data in Df and compare
+# RDS and Databricks data type are different - need handling for this

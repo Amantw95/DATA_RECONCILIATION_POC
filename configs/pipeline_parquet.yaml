@@ -1,0 +1,10 @@
+source:
+  path: "source_data_parquet"
+  format: "parquet"
+target:
+  path: "target_data_parquet"
+  format: "parquet"
+schema_check: false
+row_count_check: false
+data_reconciliation: true
+checksum_check: false
