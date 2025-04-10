@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Quality Report - {{ pipeline_name }}</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        .container {
+            max-width: 800px;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        h1, h2 {
+            color: #333;
+            text-align: center;
+        }
+        .summary {
+            text-align: center;
+            font-size: 18px;
+            margin-bottom: 20px;
+        }
+        .summary span {
+            font-weight: bold;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            padding: 10px;
+            border: 1px solid #ddd;
+            text-align: left;
+        }
+        th {
+            background-color: #007bff;
+            color: white;
+        }
+        .pass {
+            color: green;
+            font-weight: bold;
+        }
+        .fail {
+            color: red;
+            font-weight: bold;
+        }
+        .skipped {
+            color: orange;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Data Quality Report</h1>
+    <h2>Pipeline: {{ pipeline_name }}</h2>
+    <p class="summary">
+        Generated on: <span>{{ timestamp }}</span><br>
+        Total Tests: <span>{{ total_tests }}</span> | 
+        ✅ Passed: <span class="pass">{{ passed }}</span> | 
+        ❌ Failed: <span class="fail">{{ failed }}</span> | 
+        ⏭️ Skipped: <span class="skipped">{{ skipped }}</span>
+    </p>
+
+    <table>
+        <tr>
+            <th>Test Name</th>
+            <th>Status</th>
+            <th>Result</th>
+        </tr>
+        {% for test_name, status, icon, css_class in results %}
+        <tr>
+            <td>{{ test_name }}</td>
+            <td class="{{ css_class }}">{{ status }}</td>
+            <td>{{ icon }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+</div>
+
+</body>
+</html>

@@ -1,9 +1,9 @@
 name: "Data Pipeline - CSV"
 source:
-  path: "source_data"
+  path: "resources/source_data"
   format: "csv"
 target:
-  path: "target_data"
+  path: "resources/target_data"
   format: "csv"
 schema_check: true
 row_count_check: true

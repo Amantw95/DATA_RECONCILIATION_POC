@@ -3,6 +3,7 @@ from pyspark.sql.functions import sha2, concat_ws, col
 import os
 from utilities.config_loader import load_config
 from utilities.results_store import store_results
+from utilities.generate_reports import DataQualityReport
 
 class DataReconciliation:
     def __init__(self, config_file):
@@ -21,17 +22,17 @@ class DataReconciliation:
 
     def validate_schema(self, df1, df2):
         """Check if both DataFrames have the same schema."""
-        return set(df1.schema) == set(df2.schema)
+        return "Passed" if set(df1.schema) == set(df2.schema) else "Failed"
 
     def compare_row_counts(self, df1, df2):
         """Check if both DataFrames have the same number of rows."""
-        return df1.count() == df2.count()
+        return "Passed" if df1.count() == df2.count() else "Failed"
 
     def reconcile_data(self, df1, df2):
         """Check if both DataFrames have the same data."""
         df1_sorted = df1.sort(df1.columns)
         df2_sorted = df2.sort(df2.columns)
-        return df1_sorted.exceptAll(df2_sorted).count() == 0
+        return "Passed" if df1_sorted.exceptAll(df2_sorted).count() == 0 else "Failed"
     
     def generate_checksum(self, df):
         """Generate a checksum for a large dataset in a distributed manner."""
@@ -41,7 +42,7 @@ class DataReconciliation:
     
     def validate_checksum(self, df1, df2):
         """Check if both DataFrames have the same Checksums."""
-        return self.generate_checksum(df1) == self.generate_checksum(df2)
+        return "Passed" if self.generate_checksum(df1) == self.generate_checksum(df2) else "Failed"
 
     def run_reconciliation(self):
         """Run the entire reconciliation process."""
@@ -72,26 +73,24 @@ class DataReconciliation:
             self.check_results["schema_check"] = "Skipped"
 
         if self.config["row_count_check"]:
-            self.check_results["row_count_check"] = self.validate_schema(source_df, target_df)
+            self.check_results["row_count_check"] = self.compare_row_counts(source_df, target_df)
         else:
             self.check_results["row_count_check"] = "Skipped"
 
         if self.config["data_reconciliation"]:
-           self.check_results["data_reconciliation"] = self.validate_schema(source_df, target_df)
+           self.check_results["data_reconciliation"] = self.reconcile_data(source_df, target_df)
         else:
             self.check_results["data_reconciliation"] = "Skipped"
 
         if self.config["checksum_check"]:
-            self.check_results["checksum_check"] = self.validate_schema(source_df, target_df)
+            self.check_results["checksum_check"] = self.validate_checksum(source_df, target_df)
         else:
             self.check_results["checksum_check"] = "Skipped"
 
 
         print(f"✅ Reconciliation Test Execution Completed")
-        store_results(self.config["name"], self.check_results,self.config["name"]+"_test_result.csv")
+
+        report = DataQualityReport(self.config["name"], self.check_results)
+        path = report.generate_report()
+        print(f"✅ Reconciliation Test Report Save at :  {path}")
             
-
-
-
-# Store entire folder data in Df and compare
-# RDS and Databricks data type are different - need handling for this

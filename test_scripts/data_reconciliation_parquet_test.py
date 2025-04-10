@@ -7,17 +7,6 @@ from utilities.data_reconciliation import DataReconciliation
 # Path to the config file (update this based on your config file name & location)
 CONFIG_FILE = "pipeline_parquet"
 
-
-# def test_CheckRowCountForDf():
-#     print("helo World")
-
-# def test_CheckRowCountForDf2():
-#     print("helo World")
-
-# def test_CheckRowCountForDf3():
-#     print("helo World")
-#     pytest.xfail("failed")
-
 if __name__ == "__main__":
     # Initialize DataReconciliation with config file
     reconciler = DataReconciliation(CONFIG_FILE)
