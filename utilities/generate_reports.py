@@ -33,10 +33,7 @@ class DataQualityReport:
 
         # Load Jinja2 Template
         env = Environment(loader=FileSystemLoader(self.template_folder))
-        available_templates = env.list_templates()
-        print("🔍 Available templates:", available_templates)
         template = env.get_template("report_template.html")
-        print("fetched Template: ", template)
 
         # Render Template
         html_content = template.render(
@@ -49,7 +46,6 @@ class DataQualityReport:
             results=formatted_results
         )
 
-        print("html content generated", html_content)
         # Write to file
         with open(file_path, "w") as file:
             file.write(html_content)
