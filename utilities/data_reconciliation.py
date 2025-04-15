@@ -1,10 +1,4 @@
-from pyspark.sql import SparkSession
 from pyspark.sql.functions import sha2, concat_ws, col
-import os
-from utilities.config_loader import load_config
-from utilities.results_store import store_results
-from utilities.generate_reports import DataQualityReport
-
 
 check_registry = {}
 
@@ -15,9 +9,9 @@ def register_check(name):
     return decorator
 
 class DataReconciliation:
-    def __init__(self, config_file):
-        self.config = load_config(config_file)
-        self.spark = SparkSession.builder.appName("DataReconciliation").getOrCreate()
+    def __init__(self, configs, spark_session):
+        self.config = configs
+        self.spark = spark_session
         self.check_results = {}
 
     def load_data(self, path, file_format):
@@ -59,6 +53,8 @@ class DataReconciliation:
 
     def run_reconciliation(self):
         """Run the entire reconciliation process."""
+        print("self.config >>>>>>>>>>>")
+        print(self.config)
         source_path = self.config["source"]["path"]
         target_path = self.config["target"]["path"]
         file_format = self.config["source"]["format"]
@@ -76,9 +72,6 @@ class DataReconciliation:
                 self.check_results[check] = "Skipped"
 
         print(f"✅ Reconciliation Test Execution Completed")
-        store_results(self.config["name"], self.check_results)
-
-        report = DataQualityReport(self.config["name"], self.check_results)
-        path = report.generate_report()
-        print(f"✅ Reconciliation Test Report Save at :  {path}")
+        return self.check_results
+    
             
