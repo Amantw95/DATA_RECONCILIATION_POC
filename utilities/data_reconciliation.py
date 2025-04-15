@@ -5,6 +5,15 @@ from utilities.config_loader import load_config
 from utilities.results_store import store_results
 from utilities.generate_reports import DataQualityReport
 
+
+check_registry = {}
+
+def register_check(name):
+    def decorator(func):
+        check_registry[name] = func
+        return func
+    return decorator
+
 class DataReconciliation:
     def __init__(self, config_file):
         self.config = load_config(config_file)
@@ -20,14 +29,17 @@ class DataReconciliation:
         else:
              raise ValueError(f"❌ Unsupported file type: {file_format}")
 
+    @register_check("schema_check")
     def validate_schema(self, df1, df2):
         """Check if both DataFrames have the same schema."""
         return "Passed" if set(df1.schema) == set(df2.schema) else "Failed"
 
+    @register_check("row_count_check")
     def compare_row_counts(self, df1, df2):
         """Check if both DataFrames have the same number of rows."""
         return "Passed" if df1.count() == df2.count() else "Failed"
 
+    @register_check("data_reconciliation")
     def reconcile_data(self, df1, df2):
         """Check if both DataFrames have the same data."""
         df1_sorted = df1.sort(df1.columns)
@@ -40,6 +52,7 @@ class DataReconciliation:
         checksum = row_hashes.selectExpr("sha2(concat_ws(',', collect_list(row_hash)), 256) as checksum").collect()[0]["checksum"]
         return checksum
     
+    @register_check("checksum_check")
     def validate_checksum(self, df1, df2):
         """Check if both DataFrames have the same Checksums."""
         return "Passed" if self.generate_checksum(df1) == self.generate_checksum(df2) else "Failed"
@@ -50,45 +63,20 @@ class DataReconciliation:
         target_path = self.config["target"]["path"]
         file_format = self.config["source"]["format"]
 
-        # source_files = set(os.listdir(source_path))
-        # target_files = set(os.listdir(target_path))
-
-        # if source_files != target_files:
-        #     print("❌ Source and target files do not match!")
-        #     print("Source files:", source_files)
-        #     print("Target files:", target_files)
-        #     return
-
-        # for file in source_files:
-
         source_df = self.load_data(source_path, file_format)
         target_df = self.load_data(target_path, file_format)
 
         source_df.show();
         target_df.show();
 
-        if self.config["schema_check"]:
-            self.check_results["schema_check"] = self.validate_schema(source_df, target_df)
-        else:
-            self.check_results["schema_check"] = "Skipped"
-
-        if self.config["row_count_check"]:
-            self.check_results["row_count_check"] = self.compare_row_counts(source_df, target_df)
-        else:
-            self.check_results["row_count_check"] = "Skipped"
-
-        if self.config["data_reconciliation"]:
-           self.check_results["data_reconciliation"] = self.reconcile_data(source_df, target_df)
-        else:
-            self.check_results["data_reconciliation"] = "Skipped"
-
-        if self.config["checksum_check"]:
-            self.check_results["checksum_check"] = self.validate_checksum(source_df, target_df)
-        else:
-            self.check_results["checksum_check"] = "Skipped"
-
+        for check, method in check_registry.items():
+            if self.config.get(check):
+                self.check_results[check] = method(self,source_df, target_df)
+            else:
+                self.check_results[check] = "Skipped"
 
         print(f"✅ Reconciliation Test Execution Completed")
+        store_results(self.config["name"], self.check_results)
 
         report = DataQualityReport(self.config["name"], self.check_results)
         path = report.generate_report()
