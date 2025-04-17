@@ -1,5 +1,9 @@
 from pyspark.sql.functions import sha2, concat_ws, col
 
+from utilities.logger import get_logger
+
+logger = get_logger("DataReconciliation")
+
 check_registry = {}
 
 def register_check(name):
@@ -53,25 +57,33 @@ class DataReconciliation:
 
     def run_reconciliation(self):
         """Run the entire reconciliation process."""
-        print("self.config >>>>>>>>>>>")
-        print(self.config)
+    
         source_path = self.config["source"]["path"]
         target_path = self.config["target"]["path"]
         file_format = self.config["source"]["format"]
+        logger.debug("<<<<<< Extracted Configs from yaml Files >>>>>>")
 
         source_df = self.load_data(source_path, file_format)
         target_df = self.load_data(target_path, file_format)
+
+        logger.debug("<<<<< Data from Source and Target Loaded >>>>>")
 
         source_df.show();
         target_df.show();
 
         for check, method in check_registry.items():
             if self.config.get(check):
-                self.check_results[check] = method(self,source_df, target_df)
+                logger.debug(f"✔️ Running {check}")
+                try:
+                    self.check_results[check] = method(self,source_df, target_df)
+                except Exception as e:
+                    logger.error(f"❌ Error during {check}", exc_info=True)
+
             else:
+                logger.debug(f"⏭️ {check} is skipped.")
                 self.check_results[check] = "Skipped"
 
-        print(f"✅ Reconciliation Test Execution Completed")
+        logger.info("🏁 Reconciliation complete.")
         return self.check_results
     
             
