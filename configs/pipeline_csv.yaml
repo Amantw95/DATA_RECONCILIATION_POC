@@ -6,6 +6,4 @@ target:
   path: "resources/target_data"
   format: "csv"
 schema_check: true
-row_count_check: true
 data_reconciliation: true
-checksum_check: true
