@@ -4,4 +4,4 @@ __pycache__/
 .pytest_cache
 test_scripts/__pycache__
 utilities/__pycache__/
-
+logs/
